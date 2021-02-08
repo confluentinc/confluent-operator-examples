@@ -93,6 +93,10 @@ kafka:
           userMemberOfAttributePattern: CN=(.*),DC=test,DC=com
           userObjectClass: organizationalRole
           userSearchBase: dc=test,dc=com
+  configOverrides:
+    server:
+      - listener.name.internal.ssl.principal.mapping.rules=RULE:^CN=([a-zA-Z0-9.]*).*$/$1/L, DEFAULT
+      - listener.name.replication.ssl.principal.mapping.rules=RULE:^CN=([a-zA-Z0-9.]*).*$/$1/L, DEFAULT
   tls:
     enabled: true
     internalTLS: true
@@ -105,7 +109,10 @@ kafka:
       type: tls
     jksPassword: kafkastorepassword
     authentication:
-      type: plain
+      type: tls
+      principalMappingRules:
+      - RULE:^CN=([a-zA-Z0-9.]*).*$/$1/L
+      - DEFAULT
     cacerts: |-
       -----BEGIN CERTIFICATE-----
       kafka_certificate_authority
@@ -137,7 +144,7 @@ connect:
         enabled: true
         internal: true
         authentication:
-          type: plain
+          type: tls
     schemaRegistry:
       enabled: true
       tls:
@@ -180,7 +187,7 @@ replicator:
         enabled: true
         internal: true
         authentication:
-          type: plain
+          type: tls
       brokerCount: 3
       bootstrapEndpoint: kafka.__kubernetes_namespace__.svc.cluster.local:9071
     mds:
@@ -219,7 +226,7 @@ schemaregistry:
         enabled: true
         internal: true
         authentication:
-          type: plain
+          type: tls
     mds:
       authentication:
         username: sr
@@ -260,7 +267,7 @@ controlcenter:
         enabled: true
         internal: true
         authentication:
-          type: plain
+          type: tls
     connectCluster:
       enabled: true
       tls:
@@ -326,7 +333,7 @@ ksql:
         enabled: true
         internal: true
         authentication:
-          type: plain
+          type: tls
       brokerCount: 3
       bootstrapEndpoint: kafka.__kubernetes_namespace__.svc.cluster.local:9071
       brokerEndpoints: kafka-0.kafka.__kubernetes_namespace__.svc.cluster.local:9071,kafka-1.kafka.__kubernetes_namespace__.svc.cluster.local:9071,kafka-2.kafka.__kubernetes_namespace__.svc.cluster.local:9071
