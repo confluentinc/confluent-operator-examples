@@ -2,9 +2,9 @@ Secure deployment with mTLS
 ============================
 
 This example covers the following deployment scenario:
-- Kafka authentication with two-way mTLS
+- Kafka authentication with mTLS
 - Authorization with RBAC
-- Network encryption for all external and internal traffic
+- Network encryption with TLS for all external and internal traffic
 
 Identity is provided by the open source OpenLDAP server, for which an example deployment spec is provided.
 Note: OpenLDAP is not included as part of Confluent Platform.

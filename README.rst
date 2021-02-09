@@ -10,6 +10,5 @@ List of Examples
 ==================
 
 * Secure deployments
-  * `RBAC for authorization, mTLS for authentication, full network encryption <./secure-mtls>`_
-  * `RBAC for authorization, SASL/Plain for authentication, full network encryption <./secure-sasl-plain>`_
-
+  * `RBAC for authorization, mTLS for authentication, TLS for full network encryption <./secure-mtls>`_
+  * `RBAC for authorization, SASL PLAIN for authentication, TLS for full network encryption <./secure-sasl-plain>`_
