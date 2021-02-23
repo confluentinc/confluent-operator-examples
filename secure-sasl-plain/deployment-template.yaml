@@ -1,0 +1,341 @@
+global:
+  provider:
+    name: gcp
+    region: us-central1
+    registry:
+      fqdn: docker.io
+      credential:
+        required: false
+  sasl:
+    plain:
+      username: kafka
+      password: kafka-secret
+  authorization:
+    superUsers:
+    - User:kafka
+    - User:mds
+    rbac:
+      enabled: true
+  dependencies:
+    mds:
+      endpoint: https://kafka.__kubernetes_namespace__.svc.cluster.local:8090
+      publicKey: |-
+        -----BEGIN PUBLIC KEY-----
+        mds_public_key
+        -----END PUBLIC KEY-----
+zookeeper:
+  name: zookeeper
+  replicas: 3
+  resources:
+    requests:
+      cpu: 200m
+      memory: 512Mi
+kafka:
+  name: kafka
+  replicas: 3
+  resources:
+    requests:
+      cpu: 200m
+      memory: 1Gi
+  loadBalancer:
+    enabled: true
+    domain: __domain__
+    bootstrapPrefix: __domain_prefix__
+    brokerPrefix: __domain_prefix__
+  staticForHostBasedRouting:
+    enabled: false
+    domain: __domain__
+    bootstrapPrefix: __domain_prefix__
+    brokerPrefix: __domain_prefix__
+    port: 443
+  nodePort:
+    enabled: false
+    host: __domain_prefix__.__domain__
+    portOffset: 30000
+  staticForPortBasedRouting:
+    enabled: false
+    host: __domain_prefix__.__domain__
+    portOffset: 9093
+  metricReporter:
+    enabled: true
+    publishMs: 30000
+    tls:
+      enabled: true
+      internal: true
+      authentication:
+        type: plain
+    bootstrapEndpoint: kafka.__kubernetes_namespace__.svc.cluster.local:9071
+  services:
+    restProxy:
+      authentication:
+        username: erp
+        password: erp-secret
+    mds:
+      https: true
+      tokenKeyPair: |-
+        -----BEGIN RSA PRIVATE KEY-----
+        mds_private_key
+        -----END RSA PRIVATE KEY-----
+      # The following LDAP configuration must be customized to your LDAP server deployment. The following configures the example test OpenLDAP server in ../example-openldap
+      ldap:
+        address: ldaps://ldap.__kubernetes_namespace__.svc.cluster.local:636
+        authentication:
+          simple:
+            credentials: Developer!
+            principal: cn=mds,dc=test,dc=com
+        configurations:
+          groupNameAttribute: cn
+          groupObjectClass: group
+          groupMemberAttribute: member
+          groupMemberAttributePattern: CN=(.*),DC=test,DC=com
+          groupSearchBase: dc=test,dc=com
+          userNameAttribute: cn
+          userMemberOfAttributePattern: CN=(.*),DC=test,DC=com
+          userObjectClass: organizationalRole
+          userSearchBase: dc=test,dc=com
+  tls:
+    enabled: true
+    internalTLS: true
+    # make sure to have super user in CN of the certificate
+    interbrokerTLS: true
+    # kafka certificate should have SAN matches "*.kafka.operator" for jolokia rolling restart.
+    # this is an example.
+    jmxTLS: true
+    jmxAuthentication:
+      type: tls
+    jksPassword: kafkastorepassword
+    authentication:
+      type: plain
+    cacerts: |-
+      -----BEGIN CERTIFICATE-----
+      kafka_certificate_authority
+      -----END CERTIFICATE-----
+    fullchain: |
+      -----BEGIN CERTIFICATE-----
+      kafka_fullchain_cert
+      -----END CERTIFICATE-----
+    privkey: |
+      -----BEGIN RSA PRIVATE KEY-----
+      kafka_cert_private_key
+      -----END RSA PRIVATE KEY-----
+connect:
+  name: connectors
+  replicas: 2
+  loadBalancer:
+    enabled: true
+    domain: __domain__
+    prefix: __domain_prefix__-connectors
+  resources:
+    requests:
+      cpu: 200m
+      memory: 1Gi
+  dependencies:
+    kafka:
+      brokerCount: 3
+      bootstrapEndpoint: kafka.__kubernetes_namespace__.svc.cluster.local:9071
+      tls:
+        enabled: true
+        internal: true
+        authentication:
+          type: plain
+    schemaRegistry:
+      enabled: true
+      tls:
+        enabled: true
+      url: https://schemaregistry.__kubernetes_namespace__.svc.cluster.local:8081
+    mds:
+      authentication:
+        username: connect
+        password: connect-secret
+  tls:
+    ### Enable REST Endpoint in SSL mode
+    ###
+    enabled: true
+    cacerts: |-
+      -----BEGIN CERTIFICATE-----
+      connect_certificate_authority
+      -----END CERTIFICATE-----
+    fullchain: |
+      -----BEGIN CERTIFICATE-----
+      connect_fullchain_cert
+      -----END CERTIFICATE-----
+    privkey: |
+      -----BEGIN RSA PRIVATE KEY-----
+      connect_cert_private_key
+      -----END RSA PRIVATE KEY-----
+replicator:
+  name: replicator
+  replicas: 2
+  resources:
+    requests:
+      cpu: 200m
+      memory: 1Gi
+  loadBalancer:
+    enabled: true
+    domain: __domain__
+    prefix: __domain_prefix__-replicator
+  dependencies:
+    kafka:
+      tls:
+        enabled: true
+        internal: true
+        authentication:
+          type: plain
+      brokerCount: 3
+      bootstrapEndpoint: kafka.__kubernetes_namespace__.svc.cluster.local:9071
+    mds:
+      authentication:
+        username: replicator
+        password: replicator-secret
+  tls:
+    enabled: true
+    cacerts: |-
+      -----BEGIN CERTIFICATE-----
+      replicator_certificate_authority
+      -----END CERTIFICATE-----
+    fullchain: |
+      -----BEGIN CERTIFICATE-----
+      replicator_fullchain_cert
+      -----END CERTIFICATE-----
+    privkey: |
+      -----BEGIN RSA PRIVATE KEY-----
+      replicator_cert_private_key
+      -----END RSA PRIVATE KEY-----
+schemaregistry:
+  name: schemaregistry
+  loadBalancer:
+    enabled: true
+    domain: __domain__
+    prefix: __domain_prefix__-schemaregistry
+  resources:
+    requests:
+      cpu: 200m
+      memory: 1Gi
+  dependencies:
+    kafka:
+      brokerCount: 3
+      bootstrapEndpoint: kafka.__kubernetes_namespace__.svc.cluster.local:9071
+      tls:
+        enabled: true
+        internal: true
+        authentication:
+          type: plain
+    mds:
+      authentication:
+        username: sr
+        password: sr-secret
+      zookeeper:
+        endpoint: zookeeper:2181
+  tls:
+    enabled: true
+    cacerts: |-
+      -----BEGIN CERTIFICATE-----
+      schemaregistry_certificate_authority
+      -----END CERTIFICATE-----
+    fullchain: |
+      -----BEGIN CERTIFICATE-----
+      schemaregistry_fullchain_cert
+      -----END CERTIFICATE-----
+    privkey: |
+      -----BEGIN RSA PRIVATE KEY-----
+      schemaregistry_cert_private_key
+      -----END RSA PRIVATE KEY-----
+controlcenter:
+  name: controlcenter
+  loadBalancer:
+    enabled: true
+    domain: __domain__
+    prefix: __domain_prefix__-controlcenter
+  resources:
+    requests:
+      cpu: 200m
+      memory: 1Gi
+  dependencies:
+    c3KafkaCluster:
+      brokerCount: 3
+      bootstrapEndpoint: kafka.__kubernetes_namespace__.svc.cluster.local:9071
+      zookeeper:
+        endpoint: zookeeper:2181
+      tls:
+        enabled: true
+        internal: true
+        authentication:
+          type: plain
+    connectCluster:
+      enabled: true
+      tls:
+        enabled: true
+      url: https://connectors.__kubernetes_namespace__.svc.cluster.local:8083
+    ksql:
+      enabled: true
+      tls:
+        enabled: true
+      advertisedUrl: https://__domain_prefix__-ksql.__domain__
+      url: https://ksql.__kubernetes_namespace__.svc.cluster.local:8088
+    schemaRegistry:
+      enabled: true
+      tls:
+        enabled: true
+      url: https://schemaregistry.__kubernetes_namespace__.svc.cluster.local:8081
+    mds:
+      authentication:
+        username: c3
+        password: c3-secret
+  tls:
+    enabled: true
+    cacerts: |-
+      -----BEGIN CERTIFICATE-----
+      controlcenter_certificate_authority
+      -----END CERTIFICATE-----
+    fullchain: |
+      -----BEGIN CERTIFICATE-----
+      controlcenter_fullchain_cert
+      -----END CERTIFICATE-----
+    privkey: |
+      -----BEGIN RSA PRIVATE KEY-----
+      controlcenter_cert_private_key
+      -----END RSA PRIVATE KEY-----
+ksql:
+  name: ksql
+  replicas: 2
+  resources:
+    requests:
+      cpu: 200m
+      memory: 1Gi
+  tls:
+    enabled: true
+    cacerts: |-
+      -----BEGIN CERTIFICATE-----
+      ksql_certificate_authority
+      -----END CERTIFICATE-----
+    fullchain: |
+      -----BEGIN CERTIFICATE-----
+      ksql_fullchain_cert
+      -----END CERTIFICATE-----
+    privkey: |
+      -----BEGIN RSA PRIVATE KEY-----
+      ksql_cert_private_key
+      -----END RSA PRIVATE KEY-----
+  loadBalancer:
+    enabled: true
+    domain: __domain__
+    prefix: __domain_prefix__-ksql
+  dependencies:
+    kafka:
+      tls:
+        enabled: true
+        internal: true
+        authentication:
+          type: plain
+      brokerCount: 3
+      bootstrapEndpoint: kafka.__kubernetes_namespace__.svc.cluster.local:9071
+      brokerEndpoints: kafka-0.kafka.__kubernetes_namespace__.svc.cluster.local:9071,kafka-1.kafka.__kubernetes_namespace__.svc.cluster.local:9071,kafka-2.kafka.__kubernetes_namespace__.svc.cluster.local:9071
+    schemaRegistry:
+      enabled: true
+      tls:
+        enabled: true
+      url: https://schemaregistry.__kubernetes_namespace__.svc.cluster.local:8081
+    mds:
+      authentication:
+        username: ksql
+        password: ksql-secret
