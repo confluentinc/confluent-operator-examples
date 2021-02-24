@@ -19,7 +19,7 @@ You'll provide the following inputs that customize the template to fit your envi
 
 - __domain__: Domain that external access will be provided on.
 - __domain_prefix__: (Optional) Prefix used in front of __domain__
-- TLS certificates:
+- TLS certificates
   
   For each component, provide the following:
   
