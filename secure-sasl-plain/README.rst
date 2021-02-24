@@ -19,11 +19,13 @@ You'll provide the following inputs that customize the template to fit your envi
 
 - __domain__: Domain that external access will be provided on.
 - __domain_prefix__: (Optional) Prefix used in front of __domain__
-- TLS certificates:
-  - For each component, provide the following:
-    1. ``cacerts``: One or more concatenated Certificate Authorities (CAs) for the component to trust the certificates presented by the Kafka brokers. 
-    2. ``fullchain``: A fullchain consists of a root CA, any intermediate CAs, and finally the certificate for the component.   
-    3. ``privkey``: Contains the private key associated with the component certificate.
+- TLS certificates
+
+  For each component, provide the following:
+  
+  1. ``cacerts``: One or more concatenated Certificate Authorities (CAs) for the component to trust the certificates presented by the Kafka brokers. 
+  2. ``fullchain``: A fullchain consists of a root CA, any intermediate CAs, and finally the certificate for the component.   
+  3. ``privkey``: Contains the private key associated with the component certificate.
 
 ==================
 TLS certificates
