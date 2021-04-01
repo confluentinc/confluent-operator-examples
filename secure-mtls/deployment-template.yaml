@@ -63,7 +63,7 @@ kafka:
       enabled: true
       internal: true
       authentication:
-        type: plain
+        type: tls
     bootstrapEndpoint: kafka.__kubernetes_namespace__.svc.cluster.local:9071
   services:
     restProxy:
@@ -158,6 +158,8 @@ connect:
     ### Enable REST Endpoint in SSL mode
     ###
     enabled: true
+    authentication:
+      type: tls    
     cacerts: |-
       -----BEGIN CERTIFICATE-----
       connect_certificate_authority
@@ -196,6 +198,8 @@ replicator:
         password: replicator-secret
   tls:
     enabled: true
+    authentication:
+      type: tls  
     cacerts: |-
       -----BEGIN CERTIFICATE-----
       replicator_certificate_authority
@@ -235,6 +239,8 @@ schemaregistry:
         endpoint: zookeeper:2181
   tls:
     enabled: true
+    authentication:
+      type: tls
     cacerts: |-
       -----BEGIN CERTIFICATE-----
       schemaregistry_certificate_authority
@@ -311,6 +317,8 @@ ksql:
       memory: 1Gi
   tls:
     enabled: true
+    authentication:
+      type: tls    
     cacerts: |-
       -----BEGIN CERTIFICATE-----
       ksql_certificate_authority
